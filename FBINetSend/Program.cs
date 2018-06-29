@@ -8,19 +8,19 @@ namespace FBINetSend
 {
     class Program
     {
-        static Socket s = null;
+        static Socket fbiSocket = null;
 
         static void Main(string[] args)
         {
             try
             {
-                s = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                IAsyncResult result = s.BeginConnect("192.168.1.18", 5000, null, null);
-                result.AsyncWaitHandle.WaitOne(5000, true);
+                fbiSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                IAsyncResult result = fbiSocket.BeginConnect("192.168.1.18", 5000, null, null);
+                // result.AsyncWaitHandle.WaitOne(5000, true);
 
-                if (!s.Connected)
+                if (!fbiSocket.Connected)
                 {
-                    s.Close();
+                    fbiSocket.Close();
                     Console.WriteLine("Failed to connect to 3DS");
                     return;
                 }
@@ -33,15 +33,16 @@ namespace FBINetSend
                 message += "http://192.168.1.17/file2.cia\n";
                 message += "http://192.168.1.17/file3.cia\n";
 
-                byte[] Largo = BitConverter.GetBytes((uint)Encoding.ASCII.GetBytes(message).Length);
+                uint addressLength = (uint) Encoding.ASCII.GetBytes(message).Length;
+                byte[] addressSize = BitConverter.GetBytes(addressLength);
                 byte[] address = Encoding.ASCII.GetBytes(message);
 
-                Array.Reverse(Largo);
-                s.Send(AppendTwoByteArrays(Largo, address));
+                Array.Reverse(addressSize);
+                fbiSocket.Send(MergeAsPayload(addressSize, address));
 
                 Console.WriteLine("Sending file...");
 
-                // s.BeginReceive(new byte[1], 0, 1, 0, new AsyncCallback(GotData), null);
+                // fbiSocket.BeginReceive(new byte[1], 0, 1, 0, new AsyncCallback(GotData), null);
 
                 Console.WriteLine("done");
                 Console.ReadKey();
@@ -52,7 +53,7 @@ namespace FBINetSend
             }
         }
 
-        static byte[] AppendTwoByteArrays(byte[] arrayA, byte[] arrayB) //Aux function to append the 2 byte arrays.
+        static byte[] MergeAsPayload(byte[] arrayA, byte[] arrayB) //Aux function to append the 2 byte arrays.
         {
             byte[] outputBytes = new byte[arrayA.Length + arrayB.Length];
             Buffer.BlockCopy(arrayA, 0, outputBytes, 0, arrayA.Length);
