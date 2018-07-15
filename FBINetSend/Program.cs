@@ -15,8 +15,8 @@ namespace FBINetSend
             try
             {
                 fbiSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                IAsyncResult result = fbiSocket.BeginConnect("192.168.1.18", 5000, null, null);
-                // result.AsyncWaitHandle.WaitOne(5000, true);
+                IAsyncResult result = fbiSocket.BeginConnect("192.168.1.17", 5000, null, null);
+                result.AsyncWaitHandle.WaitOne(5000, true);
 
                 if (!fbiSocket.Connected)
                 {
@@ -29,9 +29,14 @@ namespace FBINetSend
 
                 String message = "";
 
-                message += "http://192.168.1.17/file1.cia\n";
-                message += "http://192.168.1.17/file2.cia\n";
-                message += "http://192.168.1.17/file3.cia\n";
+                foreach(String arg in args)
+                {
+                    message += arg + "\n";
+                }
+
+                // message += "http://192.168.1.20/3ds/Captain_Toad_Treasure_Tracker_USA.cia\n";
+                //message += "http://192.168.1.17/file2.cia\n";
+                //message += "http://192.168.1.17/file3.cia\n";
 
                 uint addressLength = (uint) Encoding.ASCII.GetBytes(message).Length;
                 byte[] addressSize = BitConverter.GetBytes(addressLength);
@@ -45,11 +50,9 @@ namespace FBINetSend
                 // fbiSocket.BeginReceive(new byte[1], 0, 1, 0, new AsyncCallback(GotData), null);
 
                 Console.WriteLine("done");
-                Console.ReadKey();
             } catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                Console.ReadKey();
             }
         }
 
